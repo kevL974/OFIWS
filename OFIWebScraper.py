@@ -36,7 +36,7 @@ def extract_data_from_ads(ads: List[Tag]) -> pd.DataFrame:
 
 def request_page(n: int) -> BeautifulSoup:
     url = OUEST_FRANCE_IMMO_URL + str(n)
-    page = requests.open(url)
+    page = requests.get(url)
     return BeautifulSoup(page.content, features="lxml")
 
 
