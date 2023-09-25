@@ -1,6 +1,6 @@
 
 import pandas as pd
-from urllib.request import urlopen
+import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 from typing import List, Dict
@@ -36,8 +36,8 @@ def extract_data_from_ads(ads: List[Tag]) -> pd.DataFrame:
 
 def request_page(n: int) -> BeautifulSoup:
     url = OUEST_FRANCE_IMMO_URL + str(n)
-    page = urlopen(url)
-    return BeautifulSoup(page, features="html.parser")
+    page = requests.open(url)
+    return BeautifulSoup(page.content, features="lxml")
 
 
 if __name__ == '__main__':
