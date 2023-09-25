@@ -8,6 +8,48 @@ from typing import List, Dict
 OUEST_FRANCE_IMMO_URL = "https://www.ouestfrance-immo.com/acheter/appartement/rennes-35-35000/?page="
 
 
+def extract_announce_title(ad: Tag) -> str:
+    """
+    Extract title from ad tag
+    @param ad:  an ad bs4 tag
+    @return: title in string format
+    """
+    try:
+        return ad.find("span", {"class": "annTitre"}.text.strip())
+    except AttributeError:
+        if ad.find('h3').find("span", {"class": "annTitre"}) is None:
+            return "NA"
+        else:
+            return ad.find('h3').find("span", {"class": "annTitre"}).text.strip()
+
+
+def extract_announce_place(ad: Tag) -> str:
+    """
+    Extract place from ad tag
+    @param ad:  an ad bs4 tag
+    @return: place in string format
+    """
+    try:
+        return ad.find("span", {"class": "annVille"}).text.strip()
+    except AttributeError:
+        return "NA"
+
+
+def extract_announce_price(ad: Tag) -> str:
+    """
+    Extract price from ad tag
+    @param ad:  an ad bs4 tag
+    @return: price in string format
+    """
+    try:
+        return ad.find("span", {"class": "annPrix"}).text.strip()
+    except AttributeError:
+        if ad.find('h3').find("span", {"class": "annPrix"}) is None:
+            return "NA"
+        else:
+            return ad.find('h3').find("span", {"class": "annPrix"}).text.strip()
+
+
 def extract_data_from_ads(ads: List[Tag]) -> pd.DataFrame:
     type = []
     place = []
@@ -17,19 +59,13 @@ def extract_data_from_ads(ads: List[Tag]) -> pd.DataFrame:
         if ad_premium:
             print(f"ad number {i} is a premium ad, skiping")
         else:
-            try:
-                type_i = ad.find("span", {"class": "annTitre"}).text.strip()
-                place_i = ad.find("span", {"class": "annVille"}).text.strip()
-                price_i = ad.find("span", {"class": "annPrix"}).text.strip()
-                place.append(place_i)
-                print(f"annonce {i} : {type.strip()} - {place.strip()} - {price.strip()}")
-            except AttributeError as error:
-                type_i = ad.find('h3').find("span", {"class": "annTitre"}).text.strip()
-                price_i = ad.find('h3').find("span", {"class": "annPrix"}).text.strip()
+            type_i = extract_announce_title(ad)
+            place_i = extract_announce_place(ad)
+            price_i = extract_announce_price(ad)
 
             type.append(type_i)
             price.append(price_i)
-            place.append("NA")
+            place.append(place_i)
 
     return pd.DataFrame(data=list(zip(type, place, price)), columns=["type_apt", "place", "price"])
 
@@ -44,7 +80,6 @@ if __name__ == '__main__':
     page_i = 1
     soup = request_page(page_i)
     total_ads = int(soup.find("strong", {"class": "enteteNb"}).text.strip().replace(" ", ""))
-
     df_ads = pd.DataFrame(columns=["type_apt", "place", "price"])
 
     while total_ads > 0:
